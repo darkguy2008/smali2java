@@ -132,7 +132,7 @@ namespace Smali2Java
 
             String[] sWords = sIdentifiers.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (sWords.Length < 0)
+            if (sWords.Length == 0)
                 return null;
 
             String sInst = sWords[0].ToLowerInvariant().Trim();
