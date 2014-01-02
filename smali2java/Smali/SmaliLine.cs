@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Smali2Java
 {
@@ -78,6 +77,7 @@ namespace Smali2Java
             InvokeStatic,
             InvokeDirect,
             MoveResultObject,
+            NewInstance,
             ReturnVoid,
         }
 
@@ -151,96 +151,6 @@ namespace Smali2Java
             return rv;
         }
 
-        #region Instruction Parsing
-
-        public static bool ParseAsInstruction(SmaliLine rv, String sInst, ref String[] sWords, ref String sRawText)
-        {
-            switch (sInst)
-            {
-                case "const/4":
-                    rv.Smali = LineSmali.Const4;
-                    sWords[1] = sWords[1].Replace(",", "");
-                    rv.lRegisters[sWords[1]] = String.Empty;
-                    rv.aValue = sWords[2];
-                    break;
-                case "const-string":
-                    rv.Smali = LineSmali.ConstString;
-                    sWords[1] = sWords[1].Replace(",", "");
-                    rv.lRegisters[sWords[1]] = String.Empty;
-                    rv.aValue = sRawText;
-                    break;
-                case "invoke-static":
-                    rv.Smali = LineSmali.InvokeStatic;
-                    ParseInvocation(rv, ref sWords);
-                    break;
-                case "invoke-direct":
-                    rv.Smali = LineSmali.InvokeDirect;
-                    ParseInvocation(rv, ref sWords);
-                    break;
-                case "move-result-object":
-                    rv.Smali = LineSmali.MoveResultObject;
-                    rv.lRegisters[sWords[1]] = String.Empty;
-                    break;
-                case "return-void":
-                    rv.Smali = LineSmali.ReturnVoid;
-                    break;  
-                case "sput-object":
-                    rv.Smali = LineSmali.SputObject;
-                    if (sWords[1].EndsWith(","))
-                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
-                    ParseParameters(rv, sWords[1]);
-                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
-                    break;
-                case "iput-object":
-                    rv.Smali = LineSmali.IputObject;
-                    rv.aValue = sWords[sWords.Length - 1];
-                    sWords[sWords.Length - 1] = String.Empty;
-                    String sp = String.Join(" ", sWords.Where(x => !String.IsNullOrEmpty(x)).ToArray()).Trim();
-                    if (sp.EndsWith(","))
-                        sp = sp.Substring(0, sp.Length - 1);
-                    ParseParameters(rv, sp);
-                    break;
-            }
-            return true;
-        }
-
-        public static void ParseParameters(SmaliLine rv, String s)
-        {
-            if (s.EndsWith(","))
-                s = s.Substring(0, s.Length - 1);
-
-            if (s.Contains('{'))
-                s = s.Substring(1, s.Length - 2);
-
-            if(s.Contains(','))
-            {
-                String[] sp = s.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (String p in sp)
-                    rv.lRegisters[p.Trim()] = String.Empty;
-            }
-            else
-                rv.lRegisters[s] = String.Empty;
-        }
-
-        public static void ParseInvocation(SmaliLine rv, ref String[] sWords)
-        {
-            List<String> sp = new List<String>();
-            for (int i = 1; i < sWords.Length - 1; i++)
-                sp.Add(sWords[i]);
-            ParseParameters(rv, String.Join(" ", sp.ToArray()));
-
-            String sFunc = sWords[sWords.Length - 1];
-            rv.aClassName = SmaliUtils.General.Eat(ref sFunc, ";->", true);
-            rv.aName = SmaliUtils.General.Eat(ref sFunc, '(', true);
-
-            String[] sParameters = SmaliUtils.General.Eat(ref sFunc, ')', true).Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < sParameters.Length; i++)
-                rv.lRegisters[rv.lRegisters.Keys.ElementAt(i)] = sParameters[i];
-
-            rv.aType = sFunc;
-        }
-
-        #endregion
         #region Directive Parsing
 
         public static bool ParseAsDirective(SmaliLine rv, String sInst, ref String[] sWords, ref String sRawText)
@@ -275,7 +185,7 @@ namespace Smali2Java
                     rv.Instruction = LineInstruction.Method;
                     SetModifiers(rv, ref sWords, 1, sWords.Length - 1);
                     sRawText = String.Join(" ", sWords.Where(x => !String.IsNullOrEmpty(x)).ToArray()).Trim();
-                    ParseMethodName(rv, sRawText);
+                    rv.aExtra = sRawText;
                     break;
                 case ".prologue":
                     rv.Instruction = LineInstruction.Prologue;
@@ -373,27 +283,87 @@ namespace Smali2Java
             }
             return true;
         }
-        public static void ParseMethodName(SmaliLine l, String s)
+        #endregion
+        #region Instruction Parsing
+
+        public static bool ParseAsInstruction(SmaliLine rv, String sInst, ref String[] sWords, ref String sRawText)
         {
-            String sName = SmaliUtils.General.Eat(ref s, '(', true);
-            String sParameters = SmaliUtils.General.Eat(ref s, ')', true);
-            String sReturnType = s;
-
-            l.aName = sName;
-
-            switch (sReturnType)
+            switch (sInst)
             {
-                case "V":
-                    l.ReturnType = LineReturnType.Void;
+                case "const/4":
+                    rv.Smali = LineSmali.Const4;
+                    sWords[1] = sWords[1].Replace(",", "");
+                    rv.lRegisters[sWords[1]] = String.Empty;
+                    rv.aValue = sWords[2];
                     break;
-                case "I":
-                    l.ReturnType = LineReturnType.Int;
+                case "const-string":
+                    rv.Smali = LineSmali.ConstString;
+                    sWords[1] = sWords[1].Replace(",", "");
+                    rv.lRegisters[sWords[1]] = String.Empty;
+                    rv.aValue = sRawText;
                     break;
-                default:
-                    l.ReturnType = LineReturnType.Custom;
-                    l.aReturnType = sReturnType;
+                case "invoke-static":
+                    rv.Smali = LineSmali.InvokeStatic;
+                    // TODO: What?
+                    //ParseInvocation(rv, ref sWords);
+                    break;
+                case "invoke-direct":
+                    rv.Smali = LineSmali.InvokeDirect;
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    break;
+                case "move-result-object":
+                    rv.Smali = LineSmali.MoveResultObject;
+                    rv.lRegisters[sWords[1]] = String.Empty;
+                    break;
+                case "return-void":
+                    rv.Smali = LineSmali.ReturnVoid;
+                    break;  
+                case "sput-object":
+                    rv.Smali = LineSmali.SputObject;
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    break;
+                case "new-instance":
+                    rv.Smali = LineSmali.NewInstance;
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    break;
+                case "iput-object":
+                    rv.Smali = LineSmali.IputObject;
+                    rv.aValue = sWords[sWords.Length - 1];
+                    sWords[sWords.Length - 1] = String.Empty;
+                    String sp = String.Join(" ", sWords.Where(x => !String.IsNullOrEmpty(x)).ToArray()).Trim();
+                    if (sp.EndsWith(","))
+                        sp = sp.Substring(0, sp.Length - 1);
+                    ParseParameters(rv, sp);
                     break;
             }
+            return true;
+        }
+
+        public static void ParseParameters(SmaliLine rv, String s)
+        {
+            if (s.EndsWith(","))
+                s = s.Substring(0, s.Length - 1);
+
+            if (s.Contains('{'))
+                s = s.Substring(1, s.Length - 2);
+
+            if(s.Contains(','))
+            {
+                String[] sp = s.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (String p in sp)
+                    rv.lRegisters[p.Trim()] = String.Empty;
+            }
+            else
+                rv.lRegisters[s] = String.Empty;
         }
 
         #endregion

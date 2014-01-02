@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Smali2Java
 {
     public class SmaliMethod
     {
+        [Flags]
         public enum EMethodFlags
         {
-            ClassInit = 1,
-            Constructor = 2,
             p0IsSelf = 4
         }
 
@@ -21,11 +19,8 @@ namespace Smali2Java
         public SmaliClass ParentClass;
         public SmaliLine.EAccessMod AccessModifiers;
         public SmaliLine.ENonAccessMod NonAccessModifiers;
-        public SmaliLine.LineReturnType ReturnType;
         public EMethodFlags MethodFlags = 0;
-        public List<SmaliParameter> Parameters = new List<SmaliParameter>();
-        public String Name;
-        public String SmaliReturnType;
+        public SmaliCall MethodCall;
 
         public bool bIsFirstParam = true;
 
@@ -49,7 +44,7 @@ namespace Smali2Java
 
         public String ToJava()
         {
-            return (String.Join("\n", JavaOutput) + "\n");
+            return (String.Join("\n", JavaOutput.ToArray()) + "\n");
         }
     }
 }

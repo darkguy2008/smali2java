@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Smali2Java
 {
@@ -31,6 +30,8 @@ namespace Smali2Java
             Java = Buf.ToString();
             Buf = new StringBuilder("");
         }
+
+        public int _idxParam = 0;
 
         public void ProcessDirective(SmaliMethod m, SmaliLine l)
         {
@@ -65,6 +66,15 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.ConstString:
                     smaliInstructions.Const();
                     break;
+                case SmaliLine.LineSmali.SputObject:
+                    smaliInstructions.SputObject();
+                    break;
+                case SmaliLine.LineSmali.NewInstance:
+                    smaliInstructions.NewInstance();
+                    break;
+                case SmaliLine.LineSmali.InvokeDirect:
+                    smaliInstructions.InvokeDirect();
+                    break;
             }
         }
 
@@ -77,9 +87,8 @@ namespace Smali2Java
             {
                 m.AccessModifiers = l.AccessModifiers;
                 m.NonAccessModifiers = l.NonAccessModifiers;
-                m.Name = l.aName;
-                m.ReturnType = l.ReturnType;
-                m.SmaliReturnType = l.aReturnType;
+                m.MethodCall = SmaliCall.Parse(l.aExtra);
+                SmaliEngine.VM._idxParam = 0;
             }
             public void Parameter()
             {
@@ -87,62 +96,48 @@ namespace Smali2Java
                 {
                     m.bIsFirstParam = false;
                     m.MethodFlags |= SmaliMethod.EMethodFlags.p0IsSelf;
-                    m.Parameters.Add(new SmaliParameter()
+                    m.MethodCall.Parameters.Add(new SmaliParameter()
                     {
                         Name = "this",
                         Register = "p0",
                         Type = m.ParentClass.ClassName
                     });
+                    SmaliEngine.VM._idxParam = 1;
                 }
 
                 l.aName = char.ToUpper(l.aName[0]) + l.aName.Substring(1);
-                m.Parameters.Add(new SmaliParameter()
-                {
-                    Name = "param" + l.aName,
-                    Register = l.lRegisters.Keys.First(),
-                    Type = l.aType
-                });
+
+                // TODO: Check if this algorithm is right?
+                m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name = "param" + l.aName;
+                m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register = l.lRegisters.Keys.First();
+                SmaliEngine.VM._idxParam++;
             }
             public void Prologue()
             {
-                if (m.Name == "<clinit>")
-                    m.MethodFlags |= SmaliMethod.EMethodFlags.ClassInit;
-                if (m.Name == "<init>")
-                    m.MethodFlags |= SmaliMethod.EMethodFlags.Constructor;
-
-                if (m.MethodFlags.HasFlag(SmaliMethod.EMethodFlags.ClassInit))
-                {
-                    m.Name = "";
-                    m.ReturnType = SmaliLine.LineReturnType.Custom;
-                    m.SmaliReturnType = "";
-                }
-                else if (m.MethodFlags.HasFlag(SmaliMethod.EMethodFlags.Constructor))
-                {
-                    m.Name = m.ParentClass.ClassName.Replace(";", "");
-                    m.SmaliReturnType = "";
-                    m.ReturnType = SmaliLine.LineReturnType.Custom;
-                }
+                // TODO: Create extension method HasFlag because .NET 3.5 doesn't have it?
+                if((m.MethodCall.CallFlags & SmaliCall.ECallFlags.Constructor) == SmaliCall.ECallFlags.Constructor)
+                    m.MethodCall.Method = m.ParentClass.ClassName.Replace(";", "");
 
                 SmaliEngine.VM.Buf.AppendFormat("{0} {1} {2}",
                     SmaliUtils.General.Modifiers2Java(m.AccessModifiers, m.NonAccessModifiers),
-                    m.ReturnType == SmaliLine.LineReturnType.Custom ? SmaliUtils.General.Name2Java(m.SmaliReturnType) : m.ReturnType.ToString().ToLowerInvariant(),
-                    m.Name
+                    SmaliUtils.General.ReturnType2Java(m.MethodCall.SmaliReturnType, m.MethodCall.Return),
+                    m.MethodCall.Method                    
                 );
 
-                if (!m.MethodFlags.HasFlag(SmaliMethod.EMethodFlags.ClassInit))
+                if (((m.MethodCall.CallFlags & SmaliCall.ECallFlags.ClassInit) == SmaliCall.ECallFlags.ClassInit) == false)
                     SmaliEngine.VM.Buf.Append(" (");
                 
-                if (m.Parameters.Count > 0)
+                if (m.MethodCall.Parameters.Count > 0)
                 {
-                    for (int j = m.MethodFlags.HasFlag(SmaliMethod.EMethodFlags.p0IsSelf) ? 1 : 0; j < m.Parameters.Count; j++)
-                        SmaliEngine.VM.Buf.Append(m.Parameters[j].ToJava() + ", ");
+                    for (int j = (m.MethodFlags & SmaliMethod.EMethodFlags.p0IsSelf) == SmaliMethod.EMethodFlags.p0IsSelf ? 1 : 0; j < m.MethodCall.Parameters.Count; j++)
+                        SmaliEngine.VM.Buf.Append(m.MethodCall.Parameters[j].ToJava() + ", ");
                     SmaliEngine.VM.Buf.Remove(SmaliEngine.VM.Buf.Length - 2, 2);
 
-                    if (m.MethodFlags.HasFlag(SmaliMethod.EMethodFlags.p0IsSelf))
+                    if ((m.MethodFlags & SmaliMethod.EMethodFlags.p0IsSelf) == SmaliMethod.EMethodFlags.p0IsSelf)
                         SmaliEngine.VM.Put("p0", "this");
                 }
 
-                if (!m.MethodFlags.HasFlag(SmaliMethod.EMethodFlags.ClassInit))
+                if (((m.MethodCall.CallFlags & SmaliCall.ECallFlags.ClassInit) == SmaliCall.ECallFlags.ClassInit) == false)
                     SmaliEngine.VM.Buf.Append(") ");
 
                 SmaliEngine.VM.Buf.Append("{");
@@ -167,7 +162,57 @@ namespace Smali2Java
             {
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), l.aValue);
             }
+            public void SputObject()
+            {
+                String sReg = l.lRegisters.Keys.First();
 
+                // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
+                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                    return;
+
+                String sSrcValue = SmaliEngine.VM.Get(sReg);
+                String sDstValue = l.lRegisters[sReg];
+
+                Dictionary<String, String> args = new Dictionary<String, String>();
+                args[sReg] = sSrcValue;
+
+                SmaliCall c = SmaliCall.Parse(sDstValue);
+
+                SmaliEngine.VM.Buf = new StringBuilder();
+
+                SmaliEngine.VM.Buf.AppendFormat("{0}{1}{2} = {3};\n",
+                    c.Variable,
+                    m.ParentClass.PackageName == c.ClassName ? "" : (c.ClassName + "."),
+                    m.ParentClass.ClassName == c.Method ? "" : (c.Method + "."),
+                    sSrcValue
+                );
+
+                //TODO: Well... todo. Lol.
+                //Buffer.Append(ParseSmali(sDstValue, args));
+            }
+            public void NewInstance()
+            {
+                SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
+                StringBuilder sb = new StringBuilder();
+                sb.Append("new " + SmaliUtils.General.Name2Java(c.ClassName));
+                sb.Append("." + c.Method + "()");
+                SmaliEngine.VM.Put(l.lRegisters.Keys.First(), sb.ToString());
+            }
+            public void InvokeDirect()
+            {
+                String sReg = l.lRegisters.Keys.First();
+                // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
+                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                    return;
+
+                SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
+                
+                // It's a constructor, skip method name
+                if ((c.CallFlags & SmaliCall.ECallFlags.Constructor) == SmaliCall.ECallFlags.Constructor)
+                    SmaliEngine.VM.Buf.Append(SmaliEngine.VM.Get(sReg));
+
+                // TODO: I think this needs a bit more work :/
+            }
         }
     }
 }

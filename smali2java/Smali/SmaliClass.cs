@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Smali2Java
 {
@@ -23,7 +22,7 @@ namespace Smali2Java
         public void LoadAttributes()
         {
             SmaliLine line = Lines.Where(x => x.Instruction == SmaliLine.LineInstruction.Class).Single();
-            ClassName = line.aClassName.Substring(line.aClassName.LastIndexOf('/') + 1);
+            ClassName = line.aClassName.Substring(line.aClassName.LastIndexOf('/') + 1).Replace(";", "");
             AccessModifiers = line.AccessModifiers;
             NonAccessModifiers = line.NonAccessModifiers;
             PackageName = line.aClassName.Substring(0, line.aClassName.LastIndexOf('/'));
