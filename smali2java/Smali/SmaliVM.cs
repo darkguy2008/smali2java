@@ -92,11 +92,11 @@ namespace Smali2Java
             }
             public void Parameter()
             {
-                if (l.aName != "p0" && m.bIsFirstParam)
+                if (l.lRegisters.Keys.First() != "p0" && m.bIsFirstParam)
                 {
                     m.bIsFirstParam = false;
                     m.MethodFlags |= SmaliMethod.EMethodFlags.p0IsSelf;
-                    m.MethodCall.Parameters.Add(new SmaliParameter()
+                    m.MethodCall.Parameters.Insert(0, new SmaliParameter()
                     {
                         Name = "this",
                         Register = "p0",

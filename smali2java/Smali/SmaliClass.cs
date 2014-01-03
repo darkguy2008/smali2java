@@ -25,7 +25,8 @@ namespace Smali2Java
             ClassName = line.aClassName.Substring(line.aClassName.LastIndexOf('/') + 1).Replace(";", "");
             AccessModifiers = line.AccessModifiers;
             NonAccessModifiers = line.NonAccessModifiers;
-            PackageName = line.aClassName.Substring(0, line.aClassName.LastIndexOf('/'));
+            if(line.aClassName.Contains("/"))
+                PackageName = line.aClassName.Substring(0, line.aClassName.LastIndexOf('/'));
 
             line = Lines.Where(x => x.Instruction == SmaliLine.LineInstruction.Super).SingleOrDefault();
             if (line != null)
@@ -35,8 +36,9 @@ namespace Smali2Java
             if (line != null)
                 Implements = line.aType;
 
-            line = Lines.Where(x => x.Instruction == SmaliLine.LineInstruction.Source).Single();
-            SourceFile = line.aExtra;
+            line = Lines.Where(x => x.Instruction == SmaliLine.LineInstruction.Source).SingleOrDefault();
+            if(line != null)
+                SourceFile = line.aExtra;
         }
         public void LoadFields()
         {
@@ -89,7 +91,8 @@ namespace Smali2Java
             String rv = String.Empty;
             StringBuilder sb = new StringBuilder();
 
-            sb.AppendFormat("package {0};\n\n", SmaliUtils.General.Name2Java(PackageName));
+            if(!String.IsNullOrEmpty(PackageName))
+                sb.AppendFormat("package {0};\n\n", SmaliUtils.General.Name2Java(PackageName));
 
             sb.AppendFormat("{0} {1} class {2} {3} {4} {5} {6} {{\n",
                 AccessModifiers == 0 ? "" : AccessModifiers.ToString().ToLowerInvariant().Replace(",", ""),
