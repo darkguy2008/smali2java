@@ -37,7 +37,7 @@ namespace Smali2Java
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append(eAccessMod == 0 ? "" : eAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
-                sb.Append(eNonAccessMod == 0 ? "" : eNonAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
+                sb.Append(eNonAccessMod == 0 ? "" : " " + eNonAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
                 return sb.ToString();
             }
 
@@ -58,6 +58,18 @@ namespace Smali2Java
                         return SmaliLine.LineReturnType.Void;
                     case "i":
                         return SmaliLine.LineReturnType.Int;
+                    case "z":
+                        return SmaliLine.LineReturnType.Boolean;
+                    case "b":
+                        return SmaliLine.LineReturnType.Byte;
+                    case "s":
+                        return SmaliLine.LineReturnType.Short;
+                    case "c":
+                        return SmaliLine.LineReturnType.Char;
+                    case "j":
+                        return SmaliLine.LineReturnType.Long;
+                    case "d":
+                        return SmaliLine.LineReturnType.Double;
                     default: 
                         return SmaliLine.LineReturnType.Custom;
                 }                

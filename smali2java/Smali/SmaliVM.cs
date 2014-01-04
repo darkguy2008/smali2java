@@ -41,6 +41,12 @@ namespace Smali2Java
             {
                 case SmaliLine.LineInstruction.Method:
                     smaliDirectives.Method();
+                    if (!m.hasParams)
+                    {
+                        smaliDirectives.noParameter();
+                        if (!m.hasProlouge)
+                            smaliDirectives.Prologue();
+                    }
                     break;
                 case SmaliLine.LineInstruction.Parameter:
                     smaliDirectives.Parameter();
@@ -92,6 +98,23 @@ namespace Smali2Java
                 m.NonAccessModifiers = l.NonAccessModifiers;
                 m.MethodCall = SmaliCall.Parse(l.aExtra);
                 SmaliEngine.VM._idxParam = 0;
+            }
+            public void noParameter()
+            {
+                m.bIsFirstParam = false;
+                m.MethodFlags |= SmaliMethod.EMethodFlags.p0IsSelf;
+                m.MethodCall.Parameters.Insert(0, new SmaliParameter()
+                {
+                    Name = "this",
+                    Register = "p0",
+                    Type = m.ParentClass.ClassName
+                });
+                SmaliEngine.VM._idxParam = 1;
+                for (; SmaliEngine.VM._idxParam < m.MethodCall.Parameters.Count; SmaliEngine.VM._idxParam++)
+                {
+                    m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name =
+                        m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register = "p" + SmaliEngine.VM._idxParam;
+                }
             }
             public void Parameter()
             {

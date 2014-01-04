@@ -87,6 +87,12 @@ namespace Smali2Java
             Custom = 1,
             Void,
             Int,
+            Boolean,
+            Byte,
+            Short,
+            Char,
+            Long,
+            Double
         }
         #endregion
 
@@ -314,6 +320,7 @@ namespace Smali2Java
                         sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
                     ParseParameters(rv, sWords[1]);
                     rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    rv.aName = sWords[sWords.Length - 1];
                     break;
                 case "move-result-object":
                     rv.Smali = LineSmali.MoveResultObject;
@@ -351,7 +358,7 @@ namespace Smali2Java
                         sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
                     ParseParameters(rv, sWords[1]);
                     rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
-                    rv.aName = sWords[3];
+                    rv.aName = sWords[ sWords.Length - 1];
                     break;
             }
             return true;
