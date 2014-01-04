@@ -93,7 +93,16 @@ namespace Smali2Java
             Short,
             Char,
             Long,
-            Double
+            Double,
+            CustomArray,
+            VoidArray,
+            IntArray,
+            BooleanArray,
+            ByteArray,
+            ShortArray,
+            CharArray,
+            LongArray,
+            DoubleArray
         }
         #endregion
 

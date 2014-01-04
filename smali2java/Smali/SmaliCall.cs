@@ -91,6 +91,25 @@ namespace Smali2Java
                                         Type = String.Empty + p[i],
                                     });
                                 }
+                                else if (p[i].Equals('[')) // This is an Array.
+                                {
+                                    if (p[i+1].Equals('L'))
+                                    {
+                                        rv.Parameters.Add(new SmaliParameter()
+                                        {
+                                            Type = p.Substring(i),
+                                        });
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        rv.Parameters.Add(new SmaliParameter()
+                                        {
+                                            Type = String.Empty + p[i] + p[i+1],
+                                        });
+                                        i++;
+                                    }
+                                }
                                 else
                                 {
                                     rv.Parameters.Add(new SmaliParameter()
