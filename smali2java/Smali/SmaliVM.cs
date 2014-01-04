@@ -41,10 +41,10 @@ namespace Smali2Java
             {
                 case SmaliLine.LineInstruction.Method:
                     smaliDirectives.Method();
-                    if (!m.hasParams)
+                    if (!m.bHasParameters)
                     {
-                        smaliDirectives.noParameter();
-                        if (!m.hasProlouge)
+                        smaliDirectives.Special_NoParameter();
+                        if (!m.bHasPrologue)
                             smaliDirectives.Prologue();
                     }
                     break;
@@ -99,7 +99,7 @@ namespace Smali2Java
                 m.MethodCall = SmaliCall.Parse(l.aExtra);
                 SmaliEngine.VM._idxParam = 0;
             }
-            public void noParameter()
+            public void Special_NoParameter()
             {
                 m.bIsFirstParam = false;
                 m.MethodFlags |= SmaliMethod.EMethodFlags.p0IsSelf;
