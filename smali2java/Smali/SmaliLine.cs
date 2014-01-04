@@ -74,6 +74,7 @@ namespace Smali2Java
             ConstString,
             SputObject,
             IputObject,
+            IputBoolean,
             InvokeStatic,
             InvokeDirect,
             MoveResultObject,
@@ -343,6 +344,14 @@ namespace Smali2Java
                     if (sp.EndsWith(","))
                         sp = sp.Substring(0, sp.Length - 1);
                     ParseParameters(rv, sp);
+                    break;
+                case "iput-boolean":
+                    rv.Smali = LineSmali.IputBoolean;
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    rv.aName = sWords[3];
                     break;
             }
             return true;
