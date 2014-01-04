@@ -78,6 +78,7 @@ namespace Smali2Java
             InvokeStatic,
             InvokeDirect,
             MoveResultObject,
+            MoveResult,
             NewInstance,
             ReturnVoid,
         }
@@ -92,7 +93,16 @@ namespace Smali2Java
             Short,
             Char,
             Long,
-            Double
+            Double,
+            CustomArray,
+            VoidArray,
+            IntArray,
+            BooleanArray,
+            ByteArray,
+            ShortArray,
+            CharArray,
+            LongArray,
+            DoubleArray
         }
         #endregion
 
@@ -326,6 +336,10 @@ namespace Smali2Java
                     rv.Smali = LineSmali.MoveResultObject;
                     rv.lRegisters[sWords[1]] = String.Empty;
                     break;
+                case "move-result":
+                    rv.Smali = LineSmali.MoveResult;
+                    rv.lRegisters[sWords[1]] = String.Empty;
+                    break;
                 case "return-void":
                     rv.Smali = LineSmali.ReturnVoid;
                     break;  
@@ -358,7 +372,7 @@ namespace Smali2Java
                         sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
                     ParseParameters(rv, sWords[1]);
                     rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
-                    rv.aName = sWords[ sWords.Length - 1];
+                    rv.aName = sWords[ sWords.Length - 1]; //Always the last entry.
                     break;
             }
             return true;

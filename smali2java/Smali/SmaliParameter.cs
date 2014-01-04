@@ -14,7 +14,7 @@ namespace Smali2Java
 
         public String ToJava()
         {
-            return SmaliUtils.General.Name2Java(Type) + " " + Name;
+            return SmaliUtils.General.Name2Java(SmaliUtils.General.ReturnType2Java(SmaliUtils.General.GetReturnType(Type), Type)).Replace(";", "").TrimEnd() + " " + Name;
         }
     }
 }

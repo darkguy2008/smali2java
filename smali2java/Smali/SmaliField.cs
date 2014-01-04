@@ -17,7 +17,7 @@ namespace Smali2Java
             return String.Format("{0} {1} {2} {3};\n",
                 AccessModifiers == 0 ? "" : AccessModifiers.ToString().ToLowerInvariant().Replace(",", ""),
                 NonAccessModifiers == 0 ? "" : NonAccessModifiers.ToString().ToLowerInvariant().Replace(",", ""),
-                SmaliUtils.General.Name2Java(Type),
+                SmaliUtils.General.Name2Java(SmaliUtils.General.ReturnType2Java(SmaliUtils.General.GetReturnType(Type),Type)).Replace(";",""),
                 Name
             );
         }

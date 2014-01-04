@@ -41,10 +41,10 @@ namespace Smali2Java
             {
                 case SmaliLine.LineInstruction.Method:
                     smaliDirectives.Method();
-                    if (!m.bHasParameters)
+                    if (!m.hasParams)
                     {
-                        smaliDirectives.Special_NoParameter();
-                        if (!m.bHasPrologue)
+                        smaliDirectives.noParameter();
+                        if (!m.hasProlouge)
                             smaliDirectives.Prologue();
                     }
                     break;
@@ -99,7 +99,7 @@ namespace Smali2Java
                 m.MethodCall = SmaliCall.Parse(l.aExtra);
                 SmaliEngine.VM._idxParam = 0;
             }
-            public void Special_NoParameter()
+            public void noParameter()
             {
                 m.bIsFirstParam = false;
                 m.MethodFlags |= SmaliMethod.EMethodFlags.p0IsSelf;
@@ -144,7 +144,7 @@ namespace Smali2Java
                 if((m.MethodCall.CallFlags & SmaliCall.ECallFlags.Constructor) == SmaliCall.ECallFlags.Constructor)
                     m.MethodCall.Method = m.ParentClass.ClassName.Replace(";", "");
 
-                SmaliEngine.VM.Buf.AppendFormat("{0} {1} {2}",
+                SmaliEngine.VM.Buf.AppendFormat("{0} {1}{2}",
                     SmaliUtils.General.Modifiers2Java(m.AccessModifiers, m.NonAccessModifiers),
                     SmaliUtils.General.ReturnType2Java(m.MethodCall.SmaliReturnType, m.MethodCall.Return),
                     m.MethodCall.Method                    
@@ -155,11 +155,17 @@ namespace Smali2Java
                 
                 if (m.MethodCall.Parameters.Count > 0)
                 {
-                    for (int j = (m.MethodFlags & SmaliMethod.EMethodFlags.p0IsSelf) == SmaliMethod.EMethodFlags.p0IsSelf ? 1 : 0; j < m.MethodCall.Parameters.Count; j++)
-                        SmaliEngine.VM.Buf.Append(m.MethodCall.Parameters[j].ToJava() + ", ");
-                    SmaliEngine.VM.Buf.Remove(SmaliEngine.VM.Buf.Length - 2, 2);
+                    // Let's save a couple of cycles and only calculate this once in this if block.
+                    bool p0isSelf = (m.MethodFlags & SmaliMethod.EMethodFlags.p0IsSelf) == SmaliMethod.EMethodFlags.p0IsSelf;
 
-                    if ((m.MethodFlags & SmaliMethod.EMethodFlags.p0IsSelf) == SmaliMethod.EMethodFlags.p0IsSelf)
+                    for (int j = p0isSelf ? 1 : 0; j < m.MethodCall.Parameters.Count; j++)
+                        SmaliEngine.VM.Buf.Append(m.MethodCall.Parameters[j].ToJava() + ", ");
+
+                    // Only remove things from the buffer if we printed any args to remove.
+                    if (m.MethodCall.Parameters.Count > (p0isSelf ? 1 : 0) )
+                        SmaliEngine.VM.Buf.Remove(SmaliEngine.VM.Buf.Length - 2, 2);
+
+                    if (p0isSelf)
                         SmaliEngine.VM.Put("p0", "this");
                 }
 
@@ -212,6 +218,9 @@ namespace Smali2Java
                     m.ParentClass.ClassName == c.Method ? "" : (c.Method + "."),
                     sSrcValue
                 );
+
+                //TODO: Well... todo. Lol.
+                //Buffer.Append(ParseSmali(sDstValue, args));
             }
             public void IputBoolean()
             {
@@ -238,6 +247,9 @@ namespace Smali2Java
                     c.Variable,
                     (sSrcValue == "0x1" ? "true" : "false")
                 );
+
+                //TODO: Well... todo. Lol.
+                //Buffer.Append(ParseSmali(sDstValue, args));
             }
 
             public void NewInstance()

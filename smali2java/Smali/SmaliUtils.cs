@@ -35,20 +35,70 @@ namespace Smali2Java
 
             public static String Modifiers2Java(SmaliLine.EAccessMod eAccessMod, SmaliLine.ENonAccessMod eNonAccessMod)
             {
-                return String.Join(" ", new String[] { eAccessMod == 0 ? "" : eAccessMod.ToString().ToLowerInvariant().Replace(",", ""), eNonAccessMod == 0 ? "" : eNonAccessMod.ToString().ToLowerInvariant().Replace(",", "") });
+                StringBuilder sb = new StringBuilder();
+                sb.Append(eAccessMod == 0 ? "" : eAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
+                if (eAccessMod !=0 && eNonAccessMod !=0) 
+                    sb.Append(" ");
+                sb.Append(eNonAccessMod == 0 ? "" : eNonAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
+                return sb.ToString();
             }
 
             public static String ReturnType2Java(SmaliLine.LineReturnType rt, String customType)
             {
-                if (rt != SmaliLine.LineReturnType.Custom)
-                    return Name2Java(rt.ToString().ToLowerInvariant().Trim());
+                if (rt.ToString().EndsWith("Array"))
+                {
+                    if (rt == SmaliLine.LineReturnType.CustomArray)
+                    {
+                        if (customType != "")
+                            return customType.Substring(1) + "[] ";
+                        else
+                            return customType.Substring(1) + "[]";
+                    }
+                    else
+                        return Name2Java(rt.ToString().Replace("Array","").ToLowerInvariant().Trim()) + "[] ";
+                }
                 else
-                    return customType;
+                {
+                    if (rt == SmaliLine.LineReturnType.Custom)
+                    {
+                        if (customType != "")
+                            return customType + ' ';
+                        else
+                            return customType;
+                    }
+                    else
+                        return Name2Java(rt.ToString().ToLowerInvariant().Trim()) + ' ';
+                }
             }
 
             public static SmaliLine.LineReturnType GetReturnType(String s)
             {
                 String rt = s.ToLowerInvariant().Trim();
+                if (rt.StartsWith("[")) // This is an array
+                {
+                    rt = rt.Substring(1);
+                    switch (rt)
+                    {
+                        case "v":
+                            return SmaliLine.LineReturnType.VoidArray;
+                        case "i":
+                            return SmaliLine.LineReturnType.IntArray;
+                        case "z":
+                            return SmaliLine.LineReturnType.BooleanArray;
+                        case "b":
+                            return SmaliLine.LineReturnType.ByteArray;
+                        case "s":
+                            return SmaliLine.LineReturnType.ShortArray;
+                        case "c":
+                            return SmaliLine.LineReturnType.CharArray;
+                        case "j":
+                            return SmaliLine.LineReturnType.LongArray;
+                        case "d":
+                            return SmaliLine.LineReturnType.DoubleArray;
+                        default:
+                            return SmaliLine.LineReturnType.CustomArray;
+                    }    
+                }
                 switch(rt)
                 {
                     case "v":

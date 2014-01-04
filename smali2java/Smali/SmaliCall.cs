@@ -73,10 +73,53 @@ namespace Smali2Java
                 {
                     String[] aParm = sParameters.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (String p in aParm)
-                        rv.Parameters.Add(new SmaliParameter()
+                        if (p.StartsWith("L"))
                         {
-                            Type = p,
-                        });
+                            rv.Parameters.Add(new SmaliParameter()
+                            {
+                                Type = p,
+                            });
+                        }
+                        else
+                        {
+                            for (int i = 0 ; i < p.Length; i++)
+                            {
+                                if (!p[i].Equals('L'))
+                                {
+                                    rv.Parameters.Add(new SmaliParameter()
+                                    {
+                                        Type = String.Empty + p[i],
+                                    });
+                                }
+                                else if (p[i].Equals('[')) // This is an Array.
+                                {
+                                    if (p[i+1].Equals('L'))
+                                    {
+                                        rv.Parameters.Add(new SmaliParameter()
+                                        {
+                                            Type = p.Substring(i),
+                                        });
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        rv.Parameters.Add(new SmaliParameter()
+                                        {
+                                            Type = String.Empty + p[i] + p[i+1],
+                                        });
+                                        i++;
+                                    }
+                                }
+                                else
+                                {
+                                    rv.Parameters.Add(new SmaliParameter()
+                                    {
+                                        Type = p.Substring(i),
+                                    });
+                                    break;
+                                }
+                            }
+                        }
                 }
             }
 
