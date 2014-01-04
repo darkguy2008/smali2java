@@ -75,6 +75,9 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.InvokeDirect:
                     smaliInstructions.InvokeDirect();
                     break;
+                case SmaliLine.LineSmali.IputBoolean:
+                    smaliInstructions.IputBoolean();
+                    break;
             }
         }
 
@@ -190,6 +193,36 @@ namespace Smali2Java
                 //TODO: Well... todo. Lol.
                 //Buffer.Append(ParseSmali(sDstValue, args));
             }
+            public void IputBoolean()
+            {
+                String sReg = l.lRegisters.Keys.First();
+
+                // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
+                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                    return;
+
+                String sSrcValue = SmaliEngine.VM.Get(sReg);
+                String sDstValue = l.aName;
+
+                Dictionary<String, String> args = new Dictionary<String, String>();
+                args[sReg] = sSrcValue;
+
+                SmaliCall c = SmaliCall.Parse(sDstValue);
+
+                SmaliEngine.VM.Buf = new StringBuilder();
+
+                SmaliEngine.VM.Buf.AppendFormat("{0}{1} = {2};\n",
+                    (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method ? 
+                        "this." : 
+                        (SmaliUtils.General.Name2Java(c.ClassName) + "." + c.Method + ".")),
+                    c.Variable,
+                    (sSrcValue == "0x1" ? "true" : "false")
+                );
+
+                //TODO: Well... todo. Lol.
+                //Buffer.Append(ParseSmali(sDstValue, args));
+            }
+
             public void NewInstance()
             {
                 SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
