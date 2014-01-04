@@ -37,14 +37,18 @@ namespace Smali2Java
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append(eAccessMod == 0 ? "" : eAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
-                sb.Append(eNonAccessMod == 0 ? "" : " " + eNonAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
+                if (eAccessMod !=0 && eNonAccessMod !=0) 
+                    sb.Append(" ");
+                sb.Append(eNonAccessMod == 0 ? "" : eNonAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
                 return sb.ToString();
             }
 
             public static String ReturnType2Java(SmaliLine.LineReturnType rt, String customType)
             {
                 if (rt != SmaliLine.LineReturnType.Custom)
-                    return Name2Java(rt.ToString().ToLowerInvariant().Trim());
+                    return Name2Java(rt.ToString().ToLowerInvariant().Trim()) + ' ';
+                else if (customType != "")
+                    return customType + ' ';
                 else
                     return customType;
             }
