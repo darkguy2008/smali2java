@@ -189,9 +189,6 @@ namespace Smali2Java
                     m.ParentClass.ClassName == c.Method ? "" : (c.Method + "."),
                     sSrcValue
                 );
-
-                //TODO: Well... todo. Lol.
-                //Buffer.Append(ParseSmali(sDstValue, args));
             }
             public void IputBoolean()
             {
@@ -218,9 +215,6 @@ namespace Smali2Java
                     c.Variable,
                     (sSrcValue == "0x1" ? "true" : "false")
                 );
-
-                //TODO: Well... todo. Lol.
-                //Buffer.Append(ParseSmali(sDstValue, args));
             }
 
             public void NewInstance()
