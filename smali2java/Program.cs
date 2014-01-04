@@ -10,12 +10,11 @@ namespace Smali2Java
         public static void Main(string[] args)
         {
             if (args.Length == 0)
-            {
-                Console.WriteLine("ERROR: No Input File!");
-                Environment.Exit(1);
-            }
-            String sFile = args[0]; // You can also put @"C:\users\youruser\desktop\smalifile.smali"
+                Console.WriteLine("ERROR: No Input File! using sample file\n");
 
+            String sFile = args.Length > 0 ? args[0] : "Samples\\AndroidHandler.smali";
+
+            Console.WriteLine("Decompiling file: " + sFile);
             Console.WriteLine("[");
             SmaliEngine e = new SmaliEngine();
             Console.Write(e.Decompile(sFile));

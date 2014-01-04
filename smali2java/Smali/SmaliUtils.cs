@@ -35,12 +35,7 @@ namespace Smali2Java
 
             public static String Modifiers2Java(SmaliLine.EAccessMod eAccessMod, SmaliLine.ENonAccessMod eNonAccessMod)
             {
-                StringBuilder sb = new StringBuilder();
-                sb.Append(eAccessMod == 0 ? "" : eAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
-                if (eAccessMod !=0 && eNonAccessMod !=0) 
-                    sb.Append(" ");
-                sb.Append(eNonAccessMod == 0 ? "" : eNonAccessMod.ToString().ToLowerInvariant().Replace(",", ""));
-                return sb.ToString();
+                return String.Join(" ", new String[] { eAccessMod == 0 ? "" : eAccessMod.ToString().ToLowerInvariant().Replace(",", ""), eNonAccessMod == 0 ? "" : eNonAccessMod.ToString().ToLowerInvariant().Replace(",", "") });
             }
 
             public static String ReturnType2Java(SmaliLine.LineReturnType rt, String customType)
