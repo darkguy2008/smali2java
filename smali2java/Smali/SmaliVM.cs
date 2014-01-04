@@ -41,10 +41,10 @@ namespace Smali2Java
             {
                 case SmaliLine.LineInstruction.Method:
                     smaliDirectives.Method();
-                    if (!m.hasParams)
+                    if (!m.bHasParameters)
                     {
                         smaliDirectives.noParameter();
-                        if (!m.hasProlouge)
+                        if (!m.bHasPrologue)
                             smaliDirectives.Prologue();
                     }
                     break;
