@@ -23,9 +23,12 @@ namespace Smali2Java
         public SmaliCall MethodCall;
 
         public bool bIsFirstParam = true;
-
+        public bool hasParams = true;
+        public bool hasProlouge = true;
         public void Process()
         {
+            hasProlouge = Lines.Where(x => x.Instruction == SmaliLine.LineInstruction.Prologue).Count() > 0;
+            hasParams = Lines.Where(x => x.Instruction == SmaliLine.LineInstruction.Parameter).Count() > 0;
             for (int i = 0; i < Lines.Count; i++)
             {
                 SmaliLine l = Lines[i];
