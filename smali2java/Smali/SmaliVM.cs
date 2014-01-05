@@ -10,6 +10,26 @@ namespace Smali2Java
         #region VM Stack (variable holder)
         public Dictionary<String, Object> vmStack = new Dictionary<String, Object>();
 
+        public void PutLastCall(SmaliCall value)
+        {
+            vmStack["lastCall"] = value;
+        }
+
+        public SmaliCall GetLastCall()
+        {
+            return (SmaliCall)vmStack["lastCall"];
+        }
+
+        public void PutLastRegisters(Dictionary<String, String> value)
+        {
+            vmStack["lastRegisters"] = value;
+        }
+
+        public Dictionary<String, String> GetLastRegisters()
+        {
+            return (Dictionary<String, String>)vmStack["lastRegisters"];
+        }
+
         public void Put(String register, String value)
         {
             vmStack[register] = value;
@@ -62,6 +82,7 @@ namespace Smali2Java
                     break;
             }
         }
+
         public void ProcessInstruction(SmaliMethod m, SmaliLine l)
         {
             smaliInstructions.m = m;
@@ -75,14 +96,29 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.SputObject:
                     smaliInstructions.SputObject();
                     break;
+                case SmaliLine.LineSmali.Return:
+                case SmaliLine.LineSmali.ReturnVoid:
+                    smaliInstructions.Return();
+                    break;
+                case SmaliLine.LineSmali.SgetObject:
+                    smaliInstructions.SgetObject();
+                    break;
                 case SmaliLine.LineSmali.NewInstance:
                     smaliInstructions.NewInstance();
                     break;
+                case SmaliLine.LineSmali.InvokeVirtual:
+                    smaliInstructions.InvokeVirtual();
+                    break;
+                case SmaliLine.LineSmali.InvokeStatic: //TODO: This may need to be on it's own function.
                 case SmaliLine.LineSmali.InvokeDirect:
                     smaliInstructions.InvokeDirect();
                     break;
                 case SmaliLine.LineSmali.IputBoolean:
                     smaliInstructions.IputBoolean();
+                    break;
+                case SmaliLine.LineSmali.MoveResult:
+                case SmaliLine.LineSmali.MoveResultObject:
+                    smaliInstructions.MoveResult();
                     break;
             }
         }
@@ -99,6 +135,7 @@ namespace Smali2Java
                 m.MethodCall = SmaliCall.Parse(l.aExtra);
                 SmaliEngine.VM._idxParam = 0;
             }
+
             public void Special_NoParameters()
             {
                 m.bIsFirstParam = false;
@@ -114,8 +151,10 @@ namespace Smali2Java
                 {
                     m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name =
                         m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register = "p" + SmaliEngine.VM._idxParam;
+                    SmaliEngine.VM.Put(m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register, m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name);
                 }
             }
+
             public void Parameter()
             {
                 if (l.lRegisters.Keys.First() != "p0" && m.bIsFirstParam)
@@ -136,8 +175,10 @@ namespace Smali2Java
                 // TODO: Check if this algorithm is right?
                 m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name = "param" + l.aName;
                 m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register = l.lRegisters.Keys.First();
+                SmaliEngine.VM.Put(m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register, m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name);
                 SmaliEngine.VM._idxParam++;
             }
+
             public void Prologue()
             {
                 // TODO: Create extension method HasFlag because .NET 3.5 doesn't have it?
@@ -175,10 +216,12 @@ namespace Smali2Java
                 SmaliEngine.VM.Buf.Append("{");
                 SmaliEngine.VM.FlushBuffer();
             }
+
             public void Line()
             {
                 SmaliEngine.VM.FlushBuffer();
             }
+
             public void EndMethod()
             {
                 SmaliEngine.VM.Buf.Append("}");
@@ -194,6 +237,7 @@ namespace Smali2Java
             {
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), l.aValue);
             }
+
             public void SputObject()
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -222,6 +266,21 @@ namespace Smali2Java
                 //TODO: Well... todo. Lol.
                 //Buffer.Append(ParseSmali(sDstValue, args));
             }
+
+            public void SgetObject()
+            {
+                String sReg = l.lRegisters.Keys.First();
+                String sSrcValue = l.lRegisters[sReg];
+                String sDstValue = sReg;
+                SmaliCall c = SmaliCall.Parse(sSrcValue);
+                string prepend = String.Empty;
+                if (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method)
+                    prepend = "this.";
+                else // I don't think sget-object should ever hit this?
+                    prepend = SmaliUtils.General.Name2Java(c.ClassName) + '.' + c.Method + '.'; 
+                SmaliEngine.VM.Put(sDstValue, prepend + c.Variable);
+            }
+
             public void IputBoolean()
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -252,6 +311,25 @@ namespace Smali2Java
                 //Buffer.Append(ParseSmali(sDstValue, args));
             }
 
+            public void Return()
+            {
+                String sSrcValue = String.Empty;
+                if (l.lRegisters.Count > 0)
+                {
+                    String sReg = l.lRegisters.Keys.First();
+
+                    // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
+                    if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                        return;
+                
+                sSrcValue = ' ' + SmaliEngine.VM.Get(sReg);
+                }
+                // We don't wipe the buffer here... there may not have been a .line before return...
+                SmaliEngine.VM.Buf.AppendFormat("return{0};\n",
+                    sSrcValue
+                );
+            }
+
             public void NewInstance()
             {
                 SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
@@ -260,6 +338,7 @@ namespace Smali2Java
                 sb.Append("." + c.Method + "()");
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), sb.ToString());
             }
+
             public void InvokeDirect()
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -272,8 +351,102 @@ namespace Smali2Java
                 // It's a constructor, skip method name
                 if ((c.CallFlags & SmaliCall.ECallFlags.Constructor) == SmaliCall.ECallFlags.Constructor)
                     SmaliEngine.VM.Buf.Append(SmaliEngine.VM.Get(sReg));
-
+                else
+                {
+                    string regs = ParseRegistersAsArgs(l.lRegisters);
+                    if (c.SmaliReturnType == SmaliLine.LineReturnType.Void)
+                    {
+                        SmaliEngine.VM.Buf.AppendFormat("{0}({1});\n",
+                            (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method ?
+                        "this." :
+                        (SmaliUtils.General.Name2Java(c.ClassName) + "." + c.Method)),
+                            regs
+                        );
+                    }
+                    //TODO: Sometimes move result will not be called... perhaps we should add some sort of check.
+                    else // We are actually returning something here, put this as the value of the last instruction to be acted on by move-result.
+                    {
+                        SmaliEngine.VM.PutLastCall(c);
+                        SmaliEngine.VM.PutLastRegisters(l.lRegisters);
+                    }
+                }
                 // TODO: I think this needs a bit more work :/
+            }
+
+            public void InvokeVirtual() //TODO: Move this out into more generic functions?
+            {
+                String sReg = l.lRegisters.Keys.First();
+                // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
+                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                    return;
+
+                SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
+                
+                // It's a constructor, skip method name
+                if ((c.CallFlags & SmaliCall.ECallFlags.Constructor) == SmaliCall.ECallFlags.Constructor)
+                    SmaliEngine.VM.Buf.Append(SmaliEngine.VM.Get(sReg));
+                else
+                {
+                    string regs = ParseRegistersAsArgs(l.lRegisters);
+                    if (c.SmaliReturnType == SmaliLine.LineReturnType.Void)
+                    {
+                        SmaliEngine.VM.Buf.AppendFormat("{0}({1});\n",
+                            (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method ?
+                        "this." :
+                        (SmaliUtils.General.Name2Java(c.ClassName) + "." + c.Method)),
+                            regs
+                        );
+                    }
+                        //TODO: Sometimes move result will not be called... perhaps we should add some sort of check.
+                    else // We are actually returning something here, put this as the value of the last instruction to be acted on by move-result.
+                    {
+                        SmaliEngine.VM.PutLastCall(c);
+                        SmaliEngine.VM.PutLastRegisters(l.lRegisters);
+                    }
+                }
+            }
+
+            public void MoveResult() //We *MIGHT* need to make a second one for objects...
+            {
+                String sReg = l.lRegisters.Keys.First();
+                // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
+                SmaliCall cOld = SmaliEngine.VM.GetLastCall();
+                Dictionary<String,String> registers = SmaliEngine.VM.GetLastRegisters();
+                if (cOld != null && registers != null) //SKIP, again something is wrong if we skip here.
+                {
+//                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                    SmaliEngine.VM.Put(sReg, cOld.SmaliReturnType.ToString() + m.IncrementTypeCount(cOld.SmaliReturnType)); //TODO: generate variable names programatically here.
+                SmaliEngine.VM.PutLastCall(null); // Wipe so we don't accidentally get something we missed again.
+                SmaliEngine.VM.PutLastRegisters(null);
+                string regs = ParseRegistersAsArgs(registers);
+                    SmaliEngine.VM.Buf.AppendFormat("{0} = {1}({2});\n",
+                        SmaliUtils.General.Name2Java(SmaliUtils.General.ReturnType2Java(cOld.SmaliReturnType, cOld.Return)).Replace(";", String.Empty) + SmaliEngine.VM.Get(sReg),
+                        (m.ParentClass.PackageName == cOld.ClassName && m.ParentClass.ClassName == cOld.Method ?
+                    "this." :
+                    (SmaliUtils.General.Name2Java(cOld.ClassName) + "." + cOld.Method)),
+                        regs
+                    );
+                    SmaliEngine.VM.FlushBuffer();
+                }
+            }
+
+            private String ParseRegistersAsArgs(Dictionary<String,String> registers) //TODO: This should be elsewhere.
+            {
+                string regs = String.Empty;
+                bool hadOne = false;
+                foreach (string s in registers.Keys)
+                {
+                    string reg = SmaliEngine.VM.Get(s);
+                    if (!hadOne && reg != "this")
+                    {
+                        regs += (reg != "this" ? SmaliEngine.VM.Get(s) + ", " : String.Empty);
+                        if (!hadOne)
+                            hadOne = true;
+                    }
+                }
+                if (hadOne)
+                    regs = regs.Substring(0, regs.Length - 2);
+                return regs;
             }
         }
     }

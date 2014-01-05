@@ -73,14 +73,17 @@ namespace Smali2Java
             Const4 = 1,
             ConstString,
             SputObject,
+            SgetObject,
             IputObject,
             IputBoolean,
             InvokeStatic,
             InvokeDirect,
+            InvokeVirtual,
             MoveResultObject,
             MoveResult,
             NewInstance,
             ReturnVoid,
+            Return,
         }
 
         public enum LineReturnType
@@ -321,8 +324,11 @@ namespace Smali2Java
                     break;
                 case "invoke-static":
                     rv.Smali = LineSmali.InvokeStatic;
-                    // TODO: What?
-                    //ParseInvocation(rv, ref sWords);
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    rv.aName = sWords[sWords.Length - 1];
                     break;
                 case "invoke-direct":
                     rv.Smali = LineSmali.InvokeDirect;
@@ -340,9 +346,24 @@ namespace Smali2Java
                     rv.Smali = LineSmali.MoveResult;
                     rv.lRegisters[sWords[1]] = String.Empty;
                     break;
+                case "return":
+                case "return-object":
+                    rv.Smali = LineSmali.Return;
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[1];
+                    break;
                 case "return-void":
                     rv.Smali = LineSmali.ReturnVoid;
-                    break;  
+                    break;
+                case "sget-object":
+                    rv.Smali = LineSmali.SgetObject;
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    break;
                 case "sput-object":
                     rv.Smali = LineSmali.SputObject;
                     if (sWords[1].EndsWith(","))
@@ -373,6 +394,16 @@ namespace Smali2Java
                     ParseParameters(rv, sWords[1]);
                     rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
                     rv.aName = sWords[ sWords.Length - 1]; //Always the last entry.
+                    break;
+                case "invoke-virtual":
+                    rv.Smali = LineSmali.InvokeVirtual;
+                    rv.aName = sWords[sWords.Length - 1];
+                    sWords[sWords.Length - 1] = String.Empty;
+                    sp = String.Join(" ", sWords.Where(x => !String.IsNullOrEmpty(x)).ToArray()).Trim();
+                    if (sp.EndsWith(","))
+                        sp = sp.Substring(0, sp.Length - 1);
+                    ParseParameters(rv, sp);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = rv.aName;
                     break;
             }
             return true;
