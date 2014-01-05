@@ -107,11 +107,9 @@ namespace Smali2Java
                     smaliInstructions.NewInstance();
                     break;
                 case SmaliLine.LineSmali.InvokeVirtual:
-                    smaliInstructions.InvokeVirtual();
-                    break;
-                case SmaliLine.LineSmali.InvokeStatic: //TODO: This may need to be on it's own function.
-                case SmaliLine.LineSmali.InvokeDirect:
-                    smaliInstructions.InvokeDirect();
+                case SmaliLine.LineSmali.InvokeStatic:
+                case SmaliLine.LineSmali.InvokeDirect: //TODO: These may need to be on their own functions, but for now the are all identical in implementation...
+                    smaliInstructions.Invoke();
                     break;
                 case SmaliLine.LineSmali.IputBoolean:
                     smaliInstructions.IputBoolean();
@@ -339,7 +337,7 @@ namespace Smali2Java
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), sb.ToString());
             }
 
-            public void InvokeDirect()
+            public void Invoke() //TODO: Move this out into more generic functions?
             {
                 String sReg = l.lRegisters.Keys.First();
                 // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
@@ -354,51 +352,15 @@ namespace Smali2Java
                 else
                 {
                     string regs = ParseRegistersAsArgs(l.lRegisters);
-                    if (c.SmaliReturnType == SmaliLine.LineReturnType.Void)
-                    {
-                        SmaliEngine.VM.Buf.AppendFormat("{0}({1});\n",
-                            (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method ?
-                        "this." :
-                        (SmaliUtils.General.Name2Java(c.ClassName) + "." + c.Method)),
-                            regs
-                        );
-                    }
-                    //TODO: Sometimes move result will not be called... perhaps we should add some sort of check.
-                    else // We are actually returning something here, put this as the value of the last instruction to be acted on by move-result.
-                    {
-                        SmaliEngine.VM.PutLastCall(c);
-                        SmaliEngine.VM.PutLastRegisters(l.lRegisters);
-                    }
-                }
-                // TODO: I think this needs a bit more work :/
-            }
-
-            public void InvokeVirtual() //TODO: Move this out into more generic functions?
-            {
-                String sReg = l.lRegisters.Keys.First();
-                // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
-                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
-                    return;
-
-                SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
-                
-                // It's a constructor, skip method name
-                if ((c.CallFlags & SmaliCall.ECallFlags.Constructor) == SmaliCall.ECallFlags.Constructor)
-                    SmaliEngine.VM.Buf.Append(SmaliEngine.VM.Get(sReg));
-                else
-                {
-                    string regs = ParseRegistersAsArgs(l.lRegisters);
-                    if (c.SmaliReturnType == SmaliLine.LineReturnType.Void)
-                    {
-                        SmaliEngine.VM.Buf.AppendFormat("{0}({1});\n",
-                            (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method ?
-                        "this." :
-                        (SmaliUtils.General.Name2Java(c.ClassName) + "." + c.Method)),
-                            regs
-                        );
-                    }
-                        //TODO: Sometimes move result will not be called... perhaps we should add some sort of check.
-                    else // We are actually returning something here, put this as the value of the last instruction to be acted on by move-result.
+                    SmaliEngine.VM.Buf.AppendFormat("{0}({1});\n",
+                        (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method ?
+                    "this." :
+                    (SmaliUtils.General.Name2Java(c.ClassName) + "." + c.Method)),
+                        regs
+                    ); //We add this to the buffer one way or another, it just gets cleared if the next instruction is MoveResult.
+                    //TODO: Maybe we should simply prepend the buffer with the variable for move result?
+                    // We are actually returning something here, put this as the value of the last instruction to be acted on by move-result.
+                    if (c.SmaliReturnType != SmaliLine.LineReturnType.Void)
                     {
                         SmaliEngine.VM.PutLastCall(c);
                         SmaliEngine.VM.PutLastRegisters(l.lRegisters);
@@ -408,6 +370,7 @@ namespace Smali2Java
 
             public void MoveResult() //We *MIGHT* need to make a second one for objects...
             {
+                SmaliEngine.VM.Buf = new StringBuilder(); // Clear the buffer We'll plug the instruction we are getting the result into in the buffer in case this never gets called, so now we need to clear it.
                 String sReg = l.lRegisters.Keys.First();
                 // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
                 SmaliCall cOld = SmaliEngine.VM.GetLastCall();
@@ -437,7 +400,7 @@ namespace Smali2Java
                 foreach (string s in registers.Keys)
                 {
                     string reg = SmaliEngine.VM.Get(s);
-                    if (!hadOne && reg != "this")
+                    if (reg != "this" || hadOne)
                     {
                         regs += (reg != "this" ? SmaliEngine.VM.Get(s) + ", " : String.Empty);
                         if (!hadOne)
