@@ -63,7 +63,7 @@ namespace Smali2Java
                     smaliDirectives.Method();
                     if (!m.bHasParameters)
                     {
-                        smaliDirectives.noParameter();
+                        smaliDirectives.Special_NoParameters();
                         if (!m.bHasPrologue)
                             smaliDirectives.Prologue();
                     }
@@ -136,7 +136,7 @@ namespace Smali2Java
                 SmaliEngine.VM._idxParam = 0;
             }
 
-            public void noParameter()
+            public void Special_NoParameters()
             {
                 m.bIsFirstParam = false;
                 m.MethodFlags |= SmaliMethod.EMethodFlags.p0IsSelf;
