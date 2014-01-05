@@ -82,6 +82,7 @@ namespace Smali2Java
                     break;
             }
         }
+
         public void ProcessInstruction(SmaliMethod m, SmaliLine l)
         {
             smaliInstructions.m = m;
@@ -108,6 +109,7 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.InvokeVirtual:
                     smaliInstructions.InvokeVirtual();
                     break;
+                case SmaliLine.LineSmali.InvokeStatic: //TODO: This may need to be on it's own function.
                 case SmaliLine.LineSmali.InvokeDirect:
                     smaliInstructions.InvokeDirect();
                     break;
@@ -133,6 +135,7 @@ namespace Smali2Java
                 m.MethodCall = SmaliCall.Parse(l.aExtra);
                 SmaliEngine.VM._idxParam = 0;
             }
+
             public void noParameter()
             {
                 m.bIsFirstParam = false;
@@ -151,6 +154,7 @@ namespace Smali2Java
                     SmaliEngine.VM.Put(m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register, m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name);
                 }
             }
+
             public void Parameter()
             {
                 if (l.lRegisters.Keys.First() != "p0" && m.bIsFirstParam)
@@ -174,6 +178,7 @@ namespace Smali2Java
                 SmaliEngine.VM.Put(m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Register, m.MethodCall.Parameters[SmaliEngine.VM._idxParam].Name);
                 SmaliEngine.VM._idxParam++;
             }
+
             public void Prologue()
             {
                 // TODO: Create extension method HasFlag because .NET 3.5 doesn't have it?
@@ -211,10 +216,12 @@ namespace Smali2Java
                 SmaliEngine.VM.Buf.Append("{");
                 SmaliEngine.VM.FlushBuffer();
             }
+
             public void Line()
             {
                 SmaliEngine.VM.FlushBuffer();
             }
+
             public void EndMethod()
             {
                 SmaliEngine.VM.Buf.Append("}");
@@ -230,6 +237,7 @@ namespace Smali2Java
             {
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), l.aValue);
             }
+
             public void SputObject()
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -258,6 +266,7 @@ namespace Smali2Java
                 //TODO: Well... todo. Lol.
                 //Buffer.Append(ParseSmali(sDstValue, args));
             }
+
             public void SgetObject()
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -271,6 +280,7 @@ namespace Smali2Java
                     prepend = SmaliUtils.General.Name2Java(c.ClassName) + '.' + c.Method + '.'; 
                 SmaliEngine.VM.Put(sDstValue, prepend + c.Variable);
             }
+
             public void IputBoolean()
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -300,6 +310,7 @@ namespace Smali2Java
                 //TODO: Well... todo. Lol.
                 //Buffer.Append(ParseSmali(sDstValue, args));
             }
+
             public void Return()
             {
                 String sSrcValue = String.Empty;
@@ -313,13 +324,12 @@ namespace Smali2Java
                 
                 sSrcValue = ' ' + SmaliEngine.VM.Get(sReg);
                 }
-
-                SmaliEngine.VM.Buf = new StringBuilder();
-
+                // We don't wipe the buffer here... there may not have been a .line before return...
                 SmaliEngine.VM.Buf.AppendFormat("return{0};\n",
                     sSrcValue
                 );
             }
+
             public void NewInstance()
             {
                 SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
@@ -328,6 +338,7 @@ namespace Smali2Java
                 sb.Append("." + c.Method + "()");
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), sb.ToString());
             }
+
             public void InvokeDirect()
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -361,6 +372,7 @@ namespace Smali2Java
                 }
                 // TODO: I think this needs a bit more work :/
             }
+
             public void InvokeVirtual() //TODO: Move this out into more generic functions?
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -393,6 +405,7 @@ namespace Smali2Java
                     }
                 }
             }
+
             public void MoveResult() //We *MIGHT* need to make a second one for objects...
             {
                 String sReg = l.lRegisters.Keys.First();
@@ -413,6 +426,7 @@ namespace Smali2Java
                     (SmaliUtils.General.Name2Java(cOld.ClassName) + "." + cOld.Method)),
                         regs
                     );
+                    SmaliEngine.VM.FlushBuffer();
                 }
             }
 

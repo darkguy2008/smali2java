@@ -324,8 +324,11 @@ namespace Smali2Java
                     break;
                 case "invoke-static":
                     rv.Smali = LineSmali.InvokeStatic;
-                    // TODO: What?
-                    //ParseInvocation(rv, ref sWords);
+                    if (sWords[1].EndsWith(","))
+                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
+                    ParseParameters(rv, sWords[1]);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
+                    rv.aName = sWords[sWords.Length - 1];
                     break;
                 case "invoke-direct":
                     rv.Smali = LineSmali.InvokeDirect;
