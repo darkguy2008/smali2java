@@ -324,11 +324,13 @@ namespace Smali2Java
                     break;
                 case "invoke-static":
                     rv.Smali = LineSmali.InvokeStatic;
-                    if (sWords[1].EndsWith(","))
-                        sWords[1] = sWords[1].Substring(0, sWords[1].Length - 1);
-                    ParseParameters(rv, sWords[1]);
-                    rv.lRegisters[rv.lRegisters.Keys.First()] = sWords[2];
                     rv.aName = sWords[sWords.Length - 1];
+                    sWords[sWords.Length - 1] = String.Empty;
+                    String sp = String.Join(" ", sWords.Where(x => !String.IsNullOrEmpty(x)).ToArray()).Trim();
+                    if (sp.EndsWith(","))
+                        sp = sp.Substring(0, sp.Length - 1);
+                    ParseParameters(rv, sp);
+                    rv.lRegisters[rv.lRegisters.Keys.First()] = rv.aName;
                     break;
                 case "invoke-direct":
                     rv.Smali = LineSmali.InvokeDirect;
@@ -382,7 +384,7 @@ namespace Smali2Java
                     rv.Smali = LineSmali.IputObject;
                     rv.aValue = sWords[sWords.Length - 1];
                     sWords[sWords.Length - 1] = String.Empty;
-                    String sp = String.Join(" ", sWords.Where(x => !String.IsNullOrEmpty(x)).ToArray()).Trim();
+                    sp = String.Join(" ", sWords.Where(x => !String.IsNullOrEmpty(x)).ToArray()).Trim();
                     if (sp.EndsWith(","))
                         sp = sp.Substring(0, sp.Length - 1);
                     ParseParameters(rv, sp);
