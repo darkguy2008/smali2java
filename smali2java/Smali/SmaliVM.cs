@@ -118,6 +118,10 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.MoveResultObject:
                     smaliInstructions.MoveResult();
                     break;
+                case SmaliLine.LineSmali.Unimplemented:
+                case SmaliLine.LineSmali.Unknown:
+                    smaliInstructions.Unimplemented();
+                    break;
             }
         }
 
@@ -242,7 +246,10 @@ namespace Smali2Java
 
                 // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
                 if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                {
+                    Unimplemented();
                     return;
+                }
 
                 String sSrcValue = SmaliEngine.VM.Get(sReg);
                 String sDstValue = l.lRegisters[sReg];
@@ -285,7 +292,10 @@ namespace Smali2Java
 
                 // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
                 if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                {
+                    Unimplemented();
                     return;
+                }
 
                 String sSrcValue = SmaliEngine.VM.Get(sReg);
                 String sDstValue = l.aName;
@@ -318,7 +328,10 @@ namespace Smali2Java
 
                     // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
                     if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                    {
+                        Unimplemented();
                         return;
+                    }
                 
                 sSrcValue = ' ' + SmaliEngine.VM.Get(sReg);
                 }
@@ -342,7 +355,10 @@ namespace Smali2Java
                 String sReg = l.lRegisters.Keys.First();
                 // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
                 if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
+                {
+                    Unimplemented();
                     return;
+                }
 
                 SmaliCall c = SmaliCall.Parse(l.lRegisters[l.lRegisters.Keys.First()]);
                 
@@ -351,7 +367,16 @@ namespace Smali2Java
                     SmaliEngine.VM.Buf.Append(SmaliEngine.VM.Get(sReg));
                 else
                 {
-                    string regs = ParseRegistersAsArgs(l.lRegisters);
+                    string regs = null;
+                    try
+                    {
+                        regs = ParseRegistersAsArgs(l.lRegisters);
+                    }
+                    catch
+                    {
+                        Unimplemented();
+                        return;
+                    }
                     SmaliEngine.VM.Buf.AppendFormat("{0}({1});\n",
                         (m.ParentClass.PackageName == c.ClassName && m.ParentClass.ClassName == c.Method ?
                     "this." :
@@ -379,9 +404,18 @@ namespace Smali2Java
                 {
 //                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
                     SmaliEngine.VM.Put(sReg, cOld.SmaliReturnType.ToString() + m.IncrementTypeCount(cOld.SmaliReturnType)); //TODO: generate variable names programatically here.
-                SmaliEngine.VM.PutLastCall(null); // Wipe so we don't accidentally get something we missed again.
-                SmaliEngine.VM.PutLastRegisters(null);
-                string regs = ParseRegistersAsArgs(registers);
+                    SmaliEngine.VM.PutLastCall(null); // Wipe so we don't accidentally get something we missed again.
+                    SmaliEngine.VM.PutLastRegisters(null);
+                    string regs = null;
+                    try
+                    {
+                        regs = ParseRegistersAsArgs(registers);
+                    }
+                    catch
+                    {
+                        Unimplemented();
+                        return;
+                    }
                     SmaliEngine.VM.Buf.AppendFormat("{0} = {1}({2});\n",
                         SmaliUtils.General.Name2Java(SmaliUtils.General.ReturnType2Java(cOld.SmaliReturnType, cOld.Return)).Replace(";", String.Empty) + SmaliEngine.VM.Get(sReg),
                         (m.ParentClass.PackageName == cOld.ClassName && m.ParentClass.ClassName == cOld.Method ?
@@ -391,6 +425,14 @@ namespace Smali2Java
                     );
                     SmaliEngine.VM.FlushBuffer();
                 }
+            }
+            public void Unimplemented()
+            {
+                SmaliEngine.VM.Buf.AppendFormat("\\*\n* Warning, {0} instruction was not processed: \n* {1}\n*\\\n",
+                    l.Smali,
+                    l.aName
+                    );
+                SmaliEngine.VM.FlushBuffer();
             }
 
             private String ParseRegistersAsArgs(Dictionary<String,String> registers) //TODO: This should be elsewhere.

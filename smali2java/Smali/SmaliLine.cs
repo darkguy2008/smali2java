@@ -84,6 +84,7 @@ namespace Smali2Java
             NewInstance,
             ReturnVoid,
             Return,
+            Unimplemented,
         }
 
         public enum LineReturnType
@@ -407,6 +408,230 @@ namespace Smali2Java
                     ParseParameters(rv, sp);
                     rv.lRegisters[rv.lRegisters.Keys.First()] = rv.aName;
                     break;
+
+                #region Unimplemented Functions
+
+                case "add-double":
+                case "add-double/2addr":
+                case "add-float":
+                case "add-float/2addr":
+                case "add-int":
+                case "add-int/2addr":
+                case "add-int/lit16":
+                case "add-int/lit8":
+                case "add-long":
+                case "add-long/2addr":
+                case "aget":
+                case "aget-boolean":
+                case "aget-byte":
+                case "aget-char":
+                case "aget-object":
+                case "aget-short":
+                case "aget-wide":
+                case "and-int":
+                case "and-int/2addr":
+                case "and-int/lit16":
+                case "and-int/lit8":
+                case "and-long":
+                case "and-long/2addr":
+                case "aput":
+                case "aput-boolean":
+                case "aput-byte":
+                case "aput-char":
+                case "aput-object":
+                case "aput-short":
+                case "aput-wide":
+                case "array-length":
+                case "check-cast":
+                case "cmpg-double":
+                case "cmpg-float":
+                case "cmpl-double":
+                case "cmpl-float":
+                case "cmp-long":
+                case "const":
+                case "const/16":
+                case "const/high16":
+                case "const-class":
+                case "const-string/jumbo":
+                case "const-wide":
+                case "const-wide/16":
+                case "const-wide/32":
+                case "const-wide/high16":
+                case "div-double":
+                case "div-float":
+                case "div-float/2addr":
+                case "div-int":
+                case "div-int/2addr":
+                case "div-int/lit16":
+                case "div-int/lit8":
+                case "div-long":
+                case "div-long/2addr":
+                case "double-to-int":
+                case "double-to-long":
+                case "execute-inline":
+                case "execute-inline/range":
+                case "fill-array-data":
+                case "filled-new-array":
+                case "filled-new-array/range":
+                case "float-to-double":
+                case "float-to-int":
+                case "float-to-long":
+                case "goto":
+                case "goto/16":
+                case "goto/32":
+                case "if-eq":
+                case "if-eqz":
+                case "if-ge":
+                case "if-gez":
+                case "if-gt":
+                case "if-gtz":
+                case "if-le":
+                case "if-lez":
+                case "if-lt":
+                case "if-ltz":
+                case "if-ne":
+                case "if-nez":
+                case "iget":
+                case "iget-boolean":
+                case "iget-byte":
+                case "iget-char":
+                case "iget-object":
+                case "iget-object-quick":
+                case "iget-object-volatile":
+                case "iget-quick":
+                case "iget-short":
+                case "iget-volatile":
+                case "iget-wide":
+                case "iget-wide-quick":
+                case "iget-wide-volatile":
+                case "instance-of":
+                case "int-to-double":
+                case "int-to-float":
+                case "int-to-long":
+                case "invoke-direct/range":
+                case "invoke-direct-empty":
+                case "invoke-interface":
+                case "invoke-interface/range":
+                case "invoke-object-init/range":
+                case "invoke-static/range":
+                case "invoke-super":
+                case "invoke-super/range":
+                case "invoke-super-quick":
+                case "invoke-super-quick/range":
+                case "invoke-virtual/range":
+                case "invoke-virtual-quick":
+                case "invoke-virtual-quick/range":
+                case "iput":
+                case "iput-byte":
+                case "iput-char":
+                case "iput-object-quick":
+                case "iput-object-volatile":
+                case "iput-quick":
+                case "iput-short":
+                case "iput-volatile":
+                case "iput-wide":
+                case "iput-wide-quick":
+                case "iput-wide-volatile":
+                case "long-to-double":
+                case "long-to-float":
+                case "long-to-int":
+                case "move":
+                case "move/16":
+                case "move/from16":
+                case "move-exception":
+                case "move-object":
+                case "move-object/16":
+                case "move-object/from16":
+                case "move-result-wide":
+                case "move-wide":
+                case "move-wide/16":
+                case "move-wide/from16":
+                case "mul-double":
+                case "mul-float":
+                case "mul-float/2addr":
+                case "mul-int":
+                case "mul-int/2addr":
+                case "mul-int/lit16":
+                case "mul-int/lit8":
+                case "mul-long":
+                case "mul-long/2addr":
+                case "neg-double":
+                case "neg-float":
+                case "neg-int":
+                case "neg-long":
+                case "new-array":
+                case "nop":
+                case "not-int":
+                case "not-long":
+                case "or-int":
+                case "or-int/2addr":
+                case "or-int/lit16":
+                case "or-long":
+                case "or-long/2addr":
+                case "packed-switch":
+                case "rem-float":
+                case "rem-float/2addr":
+                case "rem-int":
+                case "rem-int/2addr":
+                case "rem-int/lit16":
+                case "rem-int/lit8":
+                case "rem-long":
+                case "rem-long/2addr":
+                case "return-void-barrier":
+                case "return-wide":
+                case "rsub-int":
+                case "rsub-int/lit8":
+                case "sget":
+                case "sget-boolean":
+                case "sget-byte":
+                case "sget-char":
+                case "sget-object-volatile":
+                case "sget-short":
+                case "sget-volatile":
+                case "sget-wide":
+                case "sget-wide-volatile":
+                case "shl-int":
+                case "shl-int/2addr":
+                case "shl-long":
+                case "shl-long/2addr":
+                case "shr-int":
+                case "shr-int/2addr":
+                case "shr-long":
+                case "shr-long/2addr":
+                case "sparse-switch":
+                case "sput":
+                case "sput-boolean":
+                case "sput-byte":
+                case "sput-char":
+                case "sput-object-volatile":
+                case "sput-short":
+                case "sput-volatile":
+                case "sput-wide":
+                case "sput-wide-volatile":
+                case "sub-double":
+                case "sub-float":
+                case "sub-float/2addr":
+                case "sub-int":
+                case "sub-int/2addr":
+                case "sub-long":
+                case "sub-long/2addr":
+                case "throw-verification-error":
+                case "ushr-int":
+                case "ushr-int/2addr":
+                case "ushr-long":
+                case "ushr-long/2addr":
+                case "xor-int":
+                case "xor-int/2addr":
+                case "xor-long":
+                case "xor-long/2addr":
+                    rv.Smali = LineSmali.Unimplemented;
+                    rv.aName = sRawText;
+                    break;
+                default:
+                    rv.Smali = LineSmali.Unknown;
+                    rv.aName = sRawText;
+                    break;
+                #endregion
             }
             return true;
         }
