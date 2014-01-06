@@ -7,6 +7,7 @@ namespace Smali2Java
 {
     class Program
     {
+        public static bool Debug = true;
         public static void Main(string[] args)
         {
             if (args.Length == 0)

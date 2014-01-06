@@ -90,6 +90,9 @@ namespace Smali2Java
             switch (l.Smali)
             {
                 case SmaliLine.LineSmali.Const4:
+                case SmaliLine.LineSmali.Const:
+                case SmaliLine.LineSmali.Const16:
+                case SmaliLine.LineSmali.ConstHigh16: //TODO: these may end up needing seperate instruction handlers.
                 case SmaliLine.LineSmali.ConstString:
                     smaliInstructions.Const();
                     break;
@@ -118,8 +121,10 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.MoveResultObject:
                     smaliInstructions.MoveResult();
                     break;
-                case SmaliLine.LineSmali.Unimplemented:
+                case SmaliLine.LineSmali.Unimplemented: //These will cover most of the instructions right now...
                 case SmaliLine.LineSmali.Unknown:
+                case SmaliLine.LineSmali.Conditional:
+                case SmaliLine.LineSmali.Label:
                     smaliInstructions.Unimplemented();
                     break;
             }
@@ -237,7 +242,16 @@ namespace Smali2Java
 
             public void Const()
             {
+                if (Program.Debug)
+                {
+                    SmaliEngine.VM.Buf.AppendFormat("\\\\{0} = {1};\n\n",
+                        l.lRegisters.Keys.First(),
+                        l.aValue
+                    );
+                }
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), l.aValue);
+                //TODO: Figure out when these should be variable assignments, and when they should be constants...
+                //Perhaps we can start from the return value, and work our way back from there, as well as looking at which methods are getting called by these.
             }
 
             public void SputObject()
@@ -267,9 +281,6 @@ namespace Smali2Java
                     m.ParentClass.ClassName == c.Method ? "" : (c.Method + "."),
                     sSrcValue
                 );
-
-                //TODO: Well... todo. Lol.
-                //Buffer.Append(ParseSmali(sDstValue, args));
             }
 
             public void SgetObject()
@@ -393,16 +404,20 @@ namespace Smali2Java
                 }
             }
 
+
+            /*
+             * TODO: Figure out when these should be variable assignments, and when they should be constants...
+             * Right now we spam variables like there is no tomorrow. Can we really rely on "end locals"?
+             * Maybe we can count the usages, if it is never again assigned to, or it changes type we don't make a variable, and instead nest the calls...
+            */
             public void MoveResult() //We *MIGHT* need to make a second one for objects...
             {
                 SmaliEngine.VM.Buf = new StringBuilder(); // Clear the buffer We'll plug the instruction we are getting the result into in the buffer in case this never gets called, so now we need to clear it.
                 String sReg = l.lRegisters.Keys.First();
-                // SKIP! TODO: Should not skip, actually. If it skips, something IS wrong
                 SmaliCall cOld = SmaliEngine.VM.GetLastCall();
                 Dictionary<String,String> registers = SmaliEngine.VM.GetLastRegisters();
                 if (cOld != null && registers != null) //SKIP, again something is wrong if we skip here.
                 {
-//                if (!SmaliEngine.VM.vmStack.ContainsKey(sReg))
                     SmaliEngine.VM.Put(sReg, cOld.SmaliReturnType.ToString() + m.IncrementTypeCount(cOld.SmaliReturnType)); //TODO: generate variable names programatically here.
                     SmaliEngine.VM.PutLastCall(null); // Wipe so we don't accidentally get something we missed again.
                     SmaliEngine.VM.PutLastRegisters(null);
@@ -426,13 +441,19 @@ namespace Smali2Java
                     SmaliEngine.VM.FlushBuffer();
                 }
             }
+
             public void Unimplemented()
             {
-                SmaliEngine.VM.Buf.AppendFormat("\\*\n* Warning, {0} instruction was not processed: \n* {1}\n*\\\n",
-                    l.Smali,
-                    l.aName
-                    );
-                SmaliEngine.VM.FlushBuffer();
+                if (Program.Debug)
+                    SmaliEngine.VM.Buf.AppendFormat("\\*\n* Warning, {0} instruction was not processed: \n* {1}\n*\\\n",
+                        l.Smali,
+                        l.aName
+                        );
+                else // Log Verbose comments only if the debug flag is enabled.
+                    SmaliEngine.VM.Buf.AppendFormat("\\\\{0}\n",
+                        l.aName
+                        );
+                    SmaliEngine.VM.FlushBuffer();
             }
 
             private String ParseRegistersAsArgs(Dictionary<String,String> registers) //TODO: This should be elsewhere.
