@@ -88,6 +88,8 @@ namespace Smali2Java
             ReturnVoid,
             Return,
             Unimplemented,
+            Conditional,
+            Label
         }
 
         public enum LineReturnType
@@ -168,7 +170,13 @@ namespace Smali2Java
                 else
                     rv.bIsDirective = true;
 
-            if(sInst[0] != '.')
+            else if (sRawText[0] == ':') //We'll go with the idea that a label is still an instruction, but there is no need to waste cycles in the instruction parsing loop.
+            {
+                rv.Smali = LineSmali.Label; //TODO: add ParseAsLabel
+                rv.aName = sRawText;
+            }
+
+            else if (sInst[0] != '.')
                 if (!ParseAsInstruction(rv, sInst, ref sWords, ref sRawText))
                     return null;
 
@@ -494,21 +502,6 @@ namespace Smali2Java
                 case "float-to-double":
                 case "float-to-int":
                 case "float-to-long":
-                case "goto":
-                case "goto/16":
-                case "goto/32":
-                case "if-eq":
-                case "if-eqz":
-                case "if-ge":
-                case "if-gez":
-                case "if-gt":
-                case "if-gtz":
-                case "if-le":
-                case "if-lez":
-                case "if-lt":
-                case "if-ltz":
-                case "if-ne":
-                case "if-nez":
                 case "iget":
                 case "iget-boolean":
                 case "iget-byte":
@@ -643,6 +636,24 @@ namespace Smali2Java
                 case "xor-long":
                 case "xor-long/2addr":
                     rv.Smali = LineSmali.Unimplemented;
+                    rv.aName = sRawText;
+                    break;
+                case "goto":
+                case "goto/16":
+                case "goto/32":
+                case "if-eq":
+                case "if-eqz":
+                case "if-ge":
+                case "if-gez":
+                case "if-gt":
+                case "if-gtz":
+                case "if-le":
+                case "if-lez":
+                case "if-lt":
+                case "if-ltz":
+                case "if-ne":
+                case "if-nez":
+                    rv.Smali = LineSmali.Conditional;
                     rv.aName = sRawText;
                     break;
                 default:

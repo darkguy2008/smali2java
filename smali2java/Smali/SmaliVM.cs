@@ -121,8 +121,10 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.MoveResultObject:
                     smaliInstructions.MoveResult();
                     break;
-                case SmaliLine.LineSmali.Unimplemented: //These two will cover most of the instructions right now...
+                case SmaliLine.LineSmali.Unimplemented: //These will cover most of the instructions right now...
                 case SmaliLine.LineSmali.Unknown:
+                case SmaliLine.LineSmali.Conditional:
+                case SmaliLine.LineSmali.Label:
                     smaliInstructions.Unimplemented();
                     break;
             }
