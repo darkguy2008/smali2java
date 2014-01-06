@@ -71,6 +71,9 @@ namespace Smali2Java
         {
             Unknown = -1,
             Const4 = 1,
+            Const,
+            Const16,
+            ConstHigh16,
             ConstString,
             SputObject,
             SgetObject,
@@ -311,6 +314,24 @@ namespace Smali2Java
         {
             switch (sInst)
             {
+                case "const":
+                    rv.Smali = LineSmali.Const;
+                    sWords[1] = sWords[1].Replace(",", "");
+                    rv.lRegisters[sWords[1]] = String.Empty;
+                    rv.aValue = sWords[2];
+                    break;
+                case "const/16":
+                    rv.Smali = LineSmali.Const16;
+                    sWords[1] = sWords[1].Replace(",", "");
+                    rv.lRegisters[sWords[1]] = String.Empty;
+                    rv.aValue = sWords[2];
+                    break;
+                case "const/high16":
+                    rv.Smali = LineSmali.ConstHigh16;
+                    sWords[1] = sWords[1].Replace(",", "");
+                    rv.lRegisters[sWords[1]] = String.Empty;
+                    rv.aValue = sWords[2];
+                    break;
                 case "const/4":
                     rv.Smali = LineSmali.Const4;
                     sWords[1] = sWords[1].Replace(",", "");
@@ -448,9 +469,6 @@ namespace Smali2Java
                 case "cmpl-double":
                 case "cmpl-float":
                 case "cmp-long":
-                case "const":
-                case "const/16":
-                case "const/high16":
                 case "const-class":
                 case "const-string/jumbo":
                 case "const-wide":

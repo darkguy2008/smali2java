@@ -90,6 +90,9 @@ namespace Smali2Java
             switch (l.Smali)
             {
                 case SmaliLine.LineSmali.Const4:
+                case SmaliLine.LineSmali.Const:
+                case SmaliLine.LineSmali.Const16:
+                case SmaliLine.LineSmali.ConstHigh16: //TODO: these may end up needing seperate instruction handlers.
                 case SmaliLine.LineSmali.ConstString:
                     smaliInstructions.Const();
                     break;
@@ -118,7 +121,7 @@ namespace Smali2Java
                 case SmaliLine.LineSmali.MoveResultObject:
                     smaliInstructions.MoveResult();
                     break;
-                case SmaliLine.LineSmali.Unimplemented:
+                case SmaliLine.LineSmali.Unimplemented: //These two will cover most of the instructions right now...
                 case SmaliLine.LineSmali.Unknown:
                     smaliInstructions.Unimplemented();
                     break;
@@ -237,6 +240,13 @@ namespace Smali2Java
 
             public void Const()
             {
+                if (Program.Debug)
+                {
+                    SmaliEngine.VM.Buf.AppendFormat("\\\\{0} = {1};\n\n",
+                        l.lRegisters.Keys.First(),
+                        l.aValue
+                    );
+                }
                 SmaliEngine.VM.Put(l.lRegisters.Keys.First(), l.aValue);
             }
 
