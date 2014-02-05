@@ -15,10 +15,14 @@ namespace Smali2Java
 
             String sFile = args.Length > 0 ? args[0] : "Samples\\AndroidHandler.smali";
 
+            Console.BufferHeight = 10000;
+            Console.WindowWidth = Console.LargestWindowWidth;
+            Console.BufferWidth = Console.LargestWindowWidth;
+
             Console.WriteLine("Decompiling file: " + sFile);
             Console.WriteLine("[");
             SmaliEngine e = new SmaliEngine();
-            Console.Write(e.Decompile(sFile));
+            Console.Write(e.Indent(e.Decompile(sFile)));
             Console.WriteLine("]");
             Console.ReadKey();
         }

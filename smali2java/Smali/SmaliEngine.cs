@@ -21,7 +21,7 @@ namespace Smali2Java
                 if (l != null)
                     Lines.Add(l);
             }
-            
+
             SmaliClass c = new SmaliClass();
             c.Lines = Lines;
             c.LoadAttributes();
@@ -29,12 +29,40 @@ namespace Smali2Java
             c.LoadMethods();
 
             StringBuilder sb = new StringBuilder();
-            
+
             sb.Append(c.ToJava());
-            
-            rv = sb.ToString();            
+
+            rv = sb.ToString();
             return rv;
         }
 
+        public String Indent(String java)
+        {
+            int indentation = 0;
+            String indenter = "    ";
+            StringBuilder sb = new StringBuilder();
+
+            string[] lines = java.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].TrimStart().Contains("}"))
+                {
+                    indentation--;
+                }
+
+                for (int n = 0; n < indentation; n++)
+                {
+                    sb.Append(indenter);
+                }
+                sb.AppendFormat("{0}\n", lines[i]);
+
+                if (lines[i].TrimStart().Contains("{"))
+                {
+                    indentation++;
+                }
+            }
+
+            return sb.ToString();
+        }
     }
 }
