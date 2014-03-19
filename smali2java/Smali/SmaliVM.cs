@@ -17,7 +17,9 @@ namespace Smali2Java
 
         public SmaliCall GetLastCall()
         {
-            return (SmaliCall)vmStack["lastCall"];
+            object result = null;
+            vmStack.TryGetValue("lastCall", out result);
+            return result as SmaliCall;
         }
 
         public void PutLastRegisters(Dictionary<String, String> value)
@@ -27,7 +29,9 @@ namespace Smali2Java
 
         public Dictionary<String, String> GetLastRegisters()
         {
-            return (Dictionary<String, String>)vmStack["lastRegisters"];
+            object result = null;
+            vmStack.TryGetValue("lastRegisters", out result);
+            return result as Dictionary<String, String>;
         }
 
         public void Put(String register, String value)
