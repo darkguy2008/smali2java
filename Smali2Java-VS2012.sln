@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smali2Java-v3", "smali2java\Smali2Java-v3.csproj", "{35577FBA-BEF5-43FB-8B2D-E6D10F0F62C0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smali2Java-v4", "Smali2Java-v4\Smali2Java-v4.csproj", "{DCA79475-B106-4055-85BB-30AA93D39D53}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{35577FBA-BEF5-43FB-8B2D-E6D10F0F62C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35577FBA-BEF5-43FB-8B2D-E6D10F0F62C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35577FBA-BEF5-43FB-8B2D-E6D10F0F62C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCA79475-B106-4055-85BB-30AA93D39D53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCA79475-B106-4055-85BB-30AA93D39D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCA79475-B106-4055-85BB-30AA93D39D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCA79475-B106-4055-85BB-30AA93D39D53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
