@@ -47,7 +47,7 @@ namespace Smali2Java_v4.Parser
                     switch (s[0])
                     {
                         case '.':
-                            Type = ELineType.Instruction;
+                            Type = ELineType.Directive;
                             break;
                         case '#':
                             Type = ELineType.Comment;

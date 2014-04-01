@@ -14,13 +14,36 @@ namespace Smali2Java_v4.Parser
             Lines.Add(l);
         }
 
+        public String ToJava()
+        {
+            StringBuilder sb = new StringBuilder();
+            if (Lines.Count > 0)
+            {
+                foreach (Line l in Lines)
+                {
+                    if (l.Type == ELineType.Directive)
+                    {
+                        switch (l.Directive)
+                        {
+                            case ELineDirective.Class:
+                                sb.Append("class " + l.Raw);
+                                break;
+                            case ELineDirective.Super:
+                                sb.Append("extends " + l.Raw);
+                                break;
+                        }
+                    }
+                }
+            }
+            return sb.ToString();
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[");
-            foreach (Line l in Lines)
-                sb.AppendLine(l.Raw);
-            sb.AppendLine("]");
+            sb.Append("[");
+            sb.Append(ToJava());
+            sb.Append("]");
             return sb.ToString();
         }
     }
