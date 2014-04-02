@@ -19,6 +19,7 @@ namespace Smali2Java_v4.Parser
             StringBuilder sb = new StringBuilder();
             if (Lines.Count > 0)
             {
+                bool bIsClass = false;
                 foreach (Line l in Lines)
                 {
                     if (l.Type == ELineType.Directive)
@@ -26,25 +27,58 @@ namespace Smali2Java_v4.Parser
                         switch (l.Directive)
                         {
                             case ELineDirective.Class:
-                                sb.Append("class " + l.Raw);
+                                bIsClass = true;
+                                sb.Append(ParseAccesors(l.Tokens.Skip(1).Take(l.Tokens.Count - 2)));
+                                sb.Append(" class ");
+                                sb.Append(ParseObject(l.Tokens.Last()));
                                 break;
                             case ELineDirective.Super:
-                                sb.Append("extends " + l.Raw);
+                                sb.Append(" extends ");
+                                sb.Append(ParseObject(l.Tokens.Last()));
+                                break;
+                            case ELineDirective.Field:
+                                sb.Append(ParseAccesors(l.Tokens.Skip(1).Take(l.Tokens.Count - 2)));
+                                sb.Append(" " + ParseObject(l.Tokens.Last()) + ";");
                                 break;
                         }
                     }
                 }
+
+                if (bIsClass)
+                    sb.Append(" {");
             }
             return sb.ToString();
         }
 
+        private String ParseObject(string obj)
+        {
+            obj = obj.Trim();
+            if(!String.IsNullOrEmpty(obj)) {
+                if (obj.Contains(":"))
+                {
+                    String[] split = obj.Split(':');
+                    split[1] = ParseObject(split[1]);
+                    return split[1] + " " + split[0];
+                }
+                else
+                {
+                    if (obj[0] == 'L')
+                        obj = obj.Substring(1);
+                }
+                obj = obj.Replace('/', '.');
+                obj = obj.Replace(";", "");
+            }
+            return obj;
+        }
+
+        public String ParseAccesors(IEnumerable<String> acc)
+        {
+            return String.Join(" ", acc.ToArray());
+        }
+
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("[");
-            sb.Append(ToJava());
-            sb.Append("]");
-            return sb.ToString();
+            return ToJava();
         }
     }
 }

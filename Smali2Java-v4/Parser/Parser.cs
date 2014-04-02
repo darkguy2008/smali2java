@@ -9,6 +9,7 @@ namespace Smali2Java_v4.Parser
     public class ParserSmali
     {
         public List<Line> Lines = new List<Line>();
+        public List<String> Output = new List<String>();
 
         public void Parse(string filename)
         {
@@ -21,11 +22,15 @@ namespace Smali2Java_v4.Parser
             {
                 if (l.NewGroup)
                 {
-                    Console.WriteLine(lastGroup.ToString());
+                    Output.Add(lastGroup.ToString());
                     lastGroup = new LineGroup();
                 }
                 lastGroup.Add(l);
             }
+            Output.Add("}");
+
+            foreach (String s in Output)
+                Console.WriteLine("[" + s + "]");
         }
     }
 }
