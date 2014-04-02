@@ -43,8 +43,7 @@ namespace Smali2Java_v4.Parser
                             case ELineDirective.Method:
                                 sb.Append(ParseAccesors(l.Tokens.Skip(1).Take(l.Tokens.Count - 2)));
                                 sb.Append(" " + ParseMethod(l.Tokens.Last()));
-                                //sb.Append(l.Raw);
-                                sb.Append(" {");
+                                sb.AppendLine(" {");
                                 break;
                             case ELineDirective.EndMethod:
                                 sb.Append("}");
@@ -73,7 +72,11 @@ namespace Smali2Java_v4.Parser
             sb.Append(rType);
             sb.Append(" " + mName + "(");
             if (mArgs.Length > 0)
-                sb.Append(mArgs);
+            {
+                String[] args = mArgs.Split(new String[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
+                for(int i = 0; i < args.Length; i++)
+                    sb.Append(ParseObject(args[i]) + " p" + i.ToString());
+            }
             sb.Append(")");
 
             return sb.ToString();
