@@ -83,6 +83,10 @@ namespace Smali2Java_v4.Parser
                                     Directive = ELineDirective.Method;
                                     NewGroup = true;
                                     break;
+                                case ".end":
+                                    if(Tokens[1] == "method")
+                                        Directive = ELineDirective.EndMethod;
+                                    break;
                             }
                         }
                     }

@@ -40,6 +40,15 @@ namespace Smali2Java_v4.Parser
                                 sb.Append(ParseAccesors(l.Tokens.Skip(1).Take(l.Tokens.Count - 2)));
                                 sb.Append(" " + ParseObject(l.Tokens.Last()) + ";");
                                 break;
+                            case ELineDirective.Method:
+                                sb.Append(ParseAccesors(l.Tokens.Skip(1).Take(l.Tokens.Count - 2)));
+                                sb.Append(" " + ParseMethod(l.Tokens.Last()));
+                                //sb.Append(l.Raw);
+                                sb.Append(" {");
+                                break;
+                            case ELineDirective.EndMethod:
+                                sb.Append("}");
+                                break;
                         }
                     }
                 }
@@ -47,6 +56,26 @@ namespace Smali2Java_v4.Parser
                 if (bIsClass)
                     sb.Append(" {");
             }
+            return sb.ToString();
+        }
+
+        private String ParseMethod(String method)
+        {
+            StringBuilder sb = new StringBuilder();
+            String rType = method.Substring(method.LastIndexOf(')') + 1);
+            rType = ParseObject(rType);
+
+            String mName = method.Substring(0, method.IndexOf('('));
+
+            String mArgs = method.Substring(method.IndexOf('(') + 1);
+            mArgs = mArgs.Substring(0, mArgs.LastIndexOf(')'));
+
+            sb.Append(rType);
+            sb.Append(" " + mName + "(");
+            if (mArgs.Length > 0)
+                sb.Append(mArgs);
+            sb.Append(")");
+
             return sb.ToString();
         }
 
